@@ -1,0 +1,140 @@
+#!/usr/local/bin/python
+
+import commands
+import ipaddr
+import argparse
+import sys
+
+# argparse statements.
+parser = argparse.ArgumentParser(description='Nagios plugin which uses ssh to collect remote Synology server temp readings') 
+parser.add_argument('-H', '--server', dest='host',
+	metavar='ip',
+	default='192.168.1.10',
+	help='Synology server IPv4 address.  Default: 192.168.1.10.'
+	) 
+parser.add_argument('-i', '--keyfile', dest='keyfile',
+	metavar='file',
+	help='Full path to SSH keyfile.  Ex: /usr/local/etc/nagios/keyfiles/key.ppk.',
+	type=str
+	)
+parser.add_argument('-d', '--disks', dest='disks',
+	metavar='hdX,hdY',
+	default='hda',
+	help='Comma-delimited list of Synology disks to query.  Default: hda.  Ex: hda,hdb.'
+	)
+parser.add_argument('-w', '--warning', dest='warning',
+	metavar='deg',
+	default=40,
+	help='Warning temperature.  Default: 40.',
+	type=int
+	)
+parser.add_argument('-c', '--critical', dest='critical',
+	metavar='deg',
+	default=42,
+	help='Critical temperature.  Default: 42.',
+	type=int
+	)
+parser.add_argument('-f', '--fah', dest='fah',
+	action='store_true',
+	default=False,
+	help='Toggle all temperature values to Fahrenheit instead of Celsius.'
+	)
+parser.add_argument('-q', '--quiet', dest='quiet',
+	action='store_true',
+	default=False,
+	help='Quiet mode.  Omit for testing purposes only.'
+	)
+
+# fill variables from argparse.
+args = parser.parse_args()
+host = args.host
+diskinput = args.disks
+warning = int(args.warning)
+critical = int(args.critical)
+quiet = bool(args.quiet)
+fah = bool(args.fah)
+keyfile = args.keyfile
+
+# Nagios expects these returned values.
+UNKNOWN = -1
+OK = 0
+WARNING = 1
+CRITICAL = 2
+
+# fill the rest of the variables.
+disks = diskinput.split(',')
+results = []
+i = 0
+titlebuffer = 'OK'
+buffer = ''
+resultcode = UNKNOWN
+tempsymbol = 'C'
+
+# test input variables.
+if not isinstance(keyfile, str):
+	print "Please specify a keyfile."
+	raise SystemExit, resultcode
+
+if warning >= critical:
+	print "Please input a warning temperature (" + str(warning) + ") below the critical temperature (" + str(critical) + ")."
+	raise SystemExit, resultcode
+
+if warning < 0 or warning > 200:
+	print "Please input a warning temperature value between 0-200."
+	raise SystemExit, resultcode
+
+if critical < 0 or critical > 200:
+	print "Please input a critical temperature value between."
+	raise SystemExit, resultcode
+
+if not isinstance(disks, list):
+	disks = []
+	try:
+		disks.append(diskinput)
+	except:
+		print 'Invalid comma-delimited list of Synology disks.  Ex: hda,hdb.'
+		raise SystemExit, resultcode
+
+try: 
+	host = str(ipaddr.IPv4Address(host)) 
+except: 
+	print 'Invalid Synology server IPv4 address', host
+	raise SystemExit, resultcode
+
+# query the host for each disk device specified.
+for disk in disks:
+	if not quiet: print "Querying " + host + " about " + disk + "..."
+	command = '/usr/bin/ssh ' + host + ' -i ' + keyfile + ' -l root -C "smartctl --all /dev/' + disk + ' | grep Temperature"'
+	try:
+		x = commands.getoutput(command)
+	except:
+		print 'ERROR: Bad result from SSH (is your keyfile correct?).'
+		raise SystemExit, resultcode
+	y = x.split()
+	try:
+		temp = float(y[9])
+	except:
+		print 'ERROR: Bad result from Synology server for disk "' + disk + '".' 
+		raise SystemExit, resultcode
+	if fah:
+		temp = temp * 1.8 + 32.0
+		tempsymbol = 'F'
+	if not quiet: print "Got " + str(temp) + tempsymbol + "!"
+	results.append(temp)
+
+
+# loop one final time to aggregate and print the buffer
+resultcode = OK
+for disk in disks:
+	temp = results[i]
+	if int(temp) >= warning:
+		titlebuffer = 'WARNING'
+		resultcode = WARNING
+		if int(temp) >= critical:
+			titlebuffer = 'CRITICAL'
+			resultcode = CRITICAL
+	buffer = buffer + ' (' + disk + ': ' + str(temp) + tempsymbol + ")"
+	i = i + 1
+
+print 'TEMP ' + titlebuffer + ': ' + buffer
+raise SystemExit, resultcode
