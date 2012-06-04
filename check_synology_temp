@@ -15,7 +15,7 @@ parser.add_argument('-H', '--server', dest='host',
 parser.add_argument('-i', '--keyfile', dest='keyfile',
 	metavar='file',
 	help='Full path to SSH keyfile.  Ex: /usr/local/etc/nagios/keyfiles/key.ppk.',
-	type=str
+	required=True,
 	)
 parser.add_argument('-d', '--disks', dest='disks',
 	metavar='hdX,hdY',
@@ -43,6 +43,11 @@ parser.add_argument('-q', '--quiet', dest='quiet',
 	action='store_true',
 	default=False,
 	help='Quiet mode.  Omit for testing purposes only.'
+	)
+parser.add_argument('-v', '--version', 
+	action='version', 
+	version='%(prog)s 1.0',
+	help='Show program\'s version number and exit.'
 	)
 
 # fill variables from argparse.
