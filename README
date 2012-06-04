@@ -1,9 +1,9 @@
 A Nagios plugin to check disk temperatures on Synology NAS devices.
 
-usage: check_synology_temp [-h] [-H ip] [-i file] [-d hdX,hdY] [-w deg]
-                           [-c deg] [-f] [-q]
+usage: check_synology_disk [-h] [-H ip] -i file [-d mdX,mdY] [-w percent]
+                           [-c percent] [-q] [-v]
 
-Nagios plugin which uses ssh to collect remote Synology server temp readings
+Nagios plugin which uses ssh to collect remote Synology server disk capacity
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -11,14 +11,13 @@ optional arguments:
   -i file, --keyfile file
                         Full path to SSH keyfile. Ex:
                         /usr/local/etc/nagios/keyfiles/key.ppk.
-  -d hdX,hdY, --disks hdX,hdY
+  -d mdX,mdY, --disks mdX,mdY
                         Comma-delimited list of Synology disks to query.
-                        Default: hda. Ex: hda,hdb.
-  -w deg, --warning deg
-                        Warning temperature. Default: 40.
-  -c deg, --critical deg
-                        Critical temperature. Default: 42.
-  -f, --fah             Toggle all temperature values to Fahrenheit instead of
-                        Celsius.
+                        Default: md0. Ex: md0,md1.
+  -w percent, --warning percent
+                        Warning disk capacity consumed. Default: 60.
+  -c percent, --critical percent
+                        Critical disk capacity consumed. Default: 80.
   -q, --quiet           Quiet mode. Omit for testing purposes only.
+  -v, --version         Show program's version number and exit.
 
