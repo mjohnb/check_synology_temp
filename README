@@ -13,7 +13,7 @@ Installation instructions:
 - copy check_synology_disk to /usr/local/libexec/nagios (for FreeBSD).
 - make check_synology_disk executable with 'chmod +x check_synology_disk'.
 - copy/create your synology SSH keyfile to your desired directory.  I typically create a keyfile directory inside /usr/local/etc/nagios.
-- determine which HD's you which to check.  Typcially, md0 and md2 are good places to start.
+- determine which HD's you wish to check.  Typcially, md0 and md2 are good places to start.
 - run check_synology_temp -q -d md0,md2 -H [your synology IP] -i /path/to/keyfile.
 
 **********************
