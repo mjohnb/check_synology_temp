@@ -1,6 +1,20 @@
 A Nagios plugin to check disk temperatures on Synology NAS devices.
 
-This plugin is written in python and assumes python lives at /usr/local/bin/python.
+This plugin is written in python and assumes python lives at /usr/local/bin/python (FreeBSD default location).
+
+Dependencies: py-ipaddr
+
+Tested on:
+- FreeBSD 9.0 server running Nagios 3.4.1
+- Synology DSM 4.0-2228
+
+Installation instructions:
+
+- copy check_synology_disk to /usr/local/libexec/nagios (for FreeBSD).
+- make check_synology_disk executable with 'chmod +x check_synology_disk'.
+- copy/create your synology SSH keyfile to your desired directory.  I typically create a keyfile directory inside /usr/local/etc/nagios.
+- determine which HD's you which to check.  Typcially, md0 and md2 are good places to start.
+- run check_synology_temp -q -d md0,md2 -H [your synology IP] -i /path/to/keyfile.
 
 **********************
 
